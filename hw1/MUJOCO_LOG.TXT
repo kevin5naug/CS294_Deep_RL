@@ -1,0 +1,3 @@
+Wed May 30 12:15:56 2018
+ERROR: Could not open activation key file /Users/joker/.mujoco/mjkey.txt
+

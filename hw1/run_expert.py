@@ -64,9 +64,12 @@ def main():
         print('returns', returns)
         print('mean return', np.mean(returns))
         print('std of return', np.std(returns))
-
+        print( (np.array(observations)).shape)
+        print( (np.array(actions)).shape)
         expert_data = {'observations': np.array(observations),
                        'actions': np.array(actions)}
+        with open('policy.pickle', 'wb') as handle:
+            pickle.dump(expert_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 if __name__ == '__main__':
     main()
