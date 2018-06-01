@@ -43,14 +43,16 @@ def main():
         actions = []
         for i in range(args.num_rollouts):
             print('iter', i)
+            this_obs=[]
+            this_act=[]
             obs = env.reset()
             done = False
             totalr = 0.
             steps = 0
             while not done:
                 action = policy_fn(obs[None,:])
-                observations.append(obs)
-                actions.append(action)
+                this_obs.append(obs)
+                this_act.append(action)
                 obs, r, done, _ = env.step(action)
                 totalr += r
                 steps += 1
@@ -60,6 +62,8 @@ def main():
                 if steps >= max_steps:
                     break
             returns.append(totalr)
+            observations.append(this_obs)
+            actions.append(this_act)
 
         print('returns', returns)
         print('mean return', np.mean(returns))
@@ -68,7 +72,7 @@ def main():
         print( (np.array(actions)).shape)
         expert_data = {'observations': np.array(observations),
                        'actions': np.array(actions)}
-        with open('policy.pickle', 'wb') as handle:
+        with open('/Users/joker/policy.pickle', 'wb') as handle:
             pickle.dump(expert_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 if __name__ == '__main__':
