@@ -169,7 +169,7 @@ def main():
             net.eval()
 
             r_new=[]
-            for i in range (int(args.num_rollouts)//4):
+            for i in range (5):
                 totalr=0
                 obs=env.reset()
                 done=False
@@ -195,8 +195,6 @@ def main():
     plt.ylabel('loss')
     fig0.savefig('/Users/joker/imitation_learning/humanoid_basic.png')
     
-    reward_mean_history=np.array(reward_mean_history)
-    reward_std_history=np.array(reward_std_history)
     #print(reward_mean_history.shape)
     #print(reward_std_history.shape)
     print('mean:', reward_mean_history)

@@ -195,68 +195,16 @@ class Critic(nn.Module): #Critic is always discrete
         loss.backward()
         optimizer.step()
         self.history_of_values=[]
-        
-class Policy_continuous(nn.Module):
-    def __init__(self, inputdim, outputdim, n_layers, hiddendim, activation, output_activation):
-        super(Policy_continuous, self).__init__()
-        if (output_activation==None):
-            self.original_output=True
-        else:
-            self.original_output=False
-        self.history_of_log_probs=[]
-        self.layers=nn.ModuleList()
-        for i in range(n_layers-1):
-            if(i==0):
-                self.layers.append(nn.Linear(inputdim, hiddendim))
-                self.layers.append(activation)
-            else:
-                self.layers.append(nn.Linear(hiddendim, hiddendim))
-                self.layers.append(activation)
-        self.mean=nn.Linear(hiddendim, outputdim)
-        self.logstd_raw=nn.Linear(hiddendim, outputdim)
-        self.outputid=Variable(torch.eyes(outputdim), requires_grad=False)
-        if output_activation!=None:
-            self.layers.append(output_activation)
-    def forward(self, x):
-        for i, l in enumerate(self.layers):
-            if (i!=(len(self.layers)-1)):
-                x=l(x)
-        u=self.mean(x)
-        logstd=self.logstd_raw(x)
-        if(!self.original_output):
-            u=self.output_activation(u)
-            logstd=self.output_activation(logstd)
-        return u, logstd
-    def run(self, x):
-        x=Variable(Tensor(x))
-        u, logstd=self(x)
-        sigma2=torch.exp(2*logstd)*self.output_id
-        d=MultivariateNormal(u, sigma2) #might want to use N Gaussian instead
-        action=d.sample()
-        self.history_of_log_probs.append(d.log_prob(action))
-        return action
-    def learn(self, optimizer, history_of_rewards, gamma, reward_to_go):
-        total_weighted_reward=Variable(torch.zeros(1,1))
-        gradient=Variable(torch.zeros(1,1))
-        loss=0
-        if !reward_to_go:
-            #sum up all the reward along the trajectory
-            for i in reversed(range(len(history_of_rewards))):
-                total_weighted_reward = gamma * total_weighted_reward + rewards[i]
-                gradient+=self.history_of_log_probs[i]
-            loss=loss-(gradient*total_weighted_reward.expand(gradient.size())).sum()
-            loss=loss/len(history_of_rewards) #in case the episode terminates early
-        else:
-            #reward to go mode
-            for i in reversed(range(len(history_of_rewards))):
-                total_weighted_reward=gamma*total_weighted_reward+rewards[i]
-                loss=loss-(self.history_of_log_probs[i]*total_weighted_reward.expand(self.history_of_log_probs[i].size())).sum()
-            loss=loss/len(history_of_rewards) #in case the episode terminates early
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        self.history_of_log_probs=[]
-        
+
+class Agent(nn.Module):
+    def __init__(gamma=1.0,min_timesteps_per_batch=1000,max_path_length=None,learning_rate=5e-3,\ 
+             reward_to_go=True, normalize_advantages=True,nn_baseline=False,n_layers=1,size=32):
+        self.actor=build_mlp(ob_dim, ac_dim, "actor", n_layers=n_layers, size=size)
+        self.actor_optimizer=optim.Adam(actor.parameters(), lr=learning_rate)
+        if nn_baseline:
+            self.critic = build_mlp(ob_dim,1,"nn_baseline", n_layers=n_layers,size=size)
+            self.critic_optimizer=
+    
 def build_mlp(
         input_placeholder, 
         output_size,
