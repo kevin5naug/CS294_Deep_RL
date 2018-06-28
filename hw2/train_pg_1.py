@@ -198,13 +198,49 @@ class Critic(nn.Module): #Critic is always discrete
 
 class Agent(nn.Module):
     def __init__(gamma=1.0,min_timesteps_per_batch=1000,max_path_length=None,learning_rate=5e-3,\ 
-             reward_to_go=True, normalize_advantages=True,nn_baseline=False,n_layers=1,size=32):
-        self.actor=build_mlp(ob_dim, ac_dim, "actor", n_layers=n_layers, size=size)
-        self.actor_optimizer=optim.Adam(actor.parameters(), lr=learning_rate)
+          reward_to_go=True,normalize_advantages=True,nn_baseline=False,\
+                 n_layers=1,size=32,discrete=True):
+        self.actor=build_mlp(ob_dim, ac_dim, "actor",\
+                             n_layers=n_layers, size=size, discrete=discrete)
+        self.actor_optimizer=optim.Adam(self.actor.parameters(), lr=learning_rate)
         if nn_baseline:
-            self.critic = build_mlp(ob_dim,1,"nn_baseline", n_layers=n_layers,size=size)
-            self.critic_optimizer=
+            self.critic = build_mlp(ob_dim,1,"nn_baseline",\
+                                    n_layers=n_layers,size=size, discrete=discrete)
+            self.critic_optimizer=optim.Adam(self.critic.parameters(), lr=learning_rate)
+        else:
+            self.critic=None
+            self.critic_optimizer=None
+        self.gamma=gamma
+        self.reward_to_go=reward_to_go
+        self.normalize_advantages=normalize_advantages
+        self.nn_baseline=nn_baseline
     
+    def run(self, x):
+        return self.actor.run(x)
+    
+    def learn(self, history_of_rewards):
+        total_weighted_reward=0
+        gradient=Variable(torch.zeros())
+        actor_loss=0
+        critic_loss=0
+        history_of_total_weighted_reward=[]
+        if self.reward_to_go:
+            if self.nn_baseline:
+                for i in reversed(range(len(history_of_rewards))):
+                    total_weighted_reward=self.gamma*total_weighted_reward+history_of_rewards[i]
+                    history_of_total_weighted_reward.insert(0,total_weighted_reward)
+                history_of_total_weighted_reward=torch.tensor(history_of_total_weighted_reward)
+                #rescale the reward value(do not want to compute raw Q value)
+                reward_u=history_of_total_weighted_reward.mean()
+                reward_std=history_of_total_weighted_reward.std()+1e-8
+                history_of_total_weighted_reward=(history_of_total_weighted_reward-\
+                                                  reward_u)/reward_std
+                if self.normalize_advantages:
+                    #compute advantage first, then normalize it
+                    for 
+                
+                for log_prob, r, v in zip(self.actor.history_of_log_probs, history_of_total_weighted_reward, self.critic.history_of_values):
+                    adv=
 def build_mlp(
         input_placeholder, 
         output_size,
@@ -310,24 +346,9 @@ def train_PG(exp_name='',
     ob_dim = env.observation_space.shape[0]
     ac_dim = env.action_space.n if discrete else env.action_space.shape[0]
 
-    #create actor
-    actor=build_mlp(ob_dim, ac_dim, "actor", n_layers=n_layers, size=size)
-    actor_optimizer = optim.Adam(actor.parameters(), lr=3e-3)
-
-    #========================================================================================#
-    #                           ----------SECTION 5----------
-    # Optional Baseline
-    #========================================================================================#
-
-    if nn_baseline:
-        critic = build_mlp(ob_dim, 
-                                1, 
-                               "nn_baseline",
-                                n_layers=n_layers,
-                                size=size)
-        critic_optimizer=optim.Adam(critic.parameters(), lr=3e-3)
+    #todo: create Agent
     
-    #todo: initilize actor and critic
+    #todo: initilize Agent:
 
     #========================================================================================#
     # Tensorflow Engineering: Config, Session, Variable initialization
