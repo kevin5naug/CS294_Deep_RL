@@ -1,9 +1,3 @@
-#Reference: 
-#1. https://github.com/mabirck/CS294-DeepRL/blob/master/lectures/class-5/REINFORCE.py
-#2. https://github.com/JamesChuanggg/pytorch-REINFORCE/blob/master/reinforce_continuous.py
-#3. https://github.com/pytorch/examples/blob/master/reinforcement_learning/actor_critic.py
-# With the help from the implementations above, I was finally able to translate the provided skeleton code in Tensorflow into the code below
-
 import numpy as np
 import tensorflow as tf
 import gym
